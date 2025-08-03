@@ -17,6 +17,8 @@ interface IUserDoc extends Document {
   updatedAt: Date;
   isVerified?: boolean;
   verificationToken?: string;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
 }
 
 const userSchema = new Schema<IUserDoc>(
@@ -53,6 +55,14 @@ const userSchema = new Schema<IUserDoc>(
     link: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
+    resetToken: {
+      type: String,
+      default: undefined,
+    },
+    resetTokenExpiry: {
+      type: Date,
+      default: undefined,
+    },
   },
   {
     versionKey: false,

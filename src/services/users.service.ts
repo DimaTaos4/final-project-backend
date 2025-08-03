@@ -2,13 +2,15 @@ import { User, IUserDoc } from "../models/Users/Users";
 import bcrypt from "bcrypt";
 import HttpException from "../utils/HttpExeption";
 import { AddUserInput } from "../validation/user.schema";
-
+import {
+  sendEmailToConfirm,
+  sendEmailToResetPassword,
+} from "../utils/sendEmails";
 import { UpdateUserInput } from "../validation/user.schema";
-import resend from "../resend";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
-
-const { JWT_SECRET, PORT } = process.env;
+import { passwordValidation } from "../constants/user.constants";
+const { JWT_SECRET } = process.env;
 export const addUsers = async (payload: AddUserInput): Promise<IUserDoc> => {
   const existingUser = await User.findOne({ email: payload.email });
   if (existingUser) {
@@ -21,12 +23,7 @@ export const addUsers = async (payload: AddUserInput): Promise<IUserDoc> => {
   const hashPassword = await bcrypt.hash(payload.password, 10);
   const verificationToken = uuidv4();
 
-  await resend.emails.send({
-    from: "onboarding@resend.dev",
-    to: payload.email,
-    subject: "Confirm your email",
-    html: `Click to verify: <a href="http://localhost:${PORT}/api/users/verify/${verificationToken}">Verify Email</a>`, // должен быть ссылка на BACKEND
-  });
+  await sendEmailToConfirm(payload.email, verificationToken);
 
   return User.create({
     ...payload,
@@ -91,4 +88,62 @@ export const updateUserProfile = async (
     { $set: updates },
     { new: true, runValidators: true, context: "query" }
   ).select("-password");
+};
+
+export const requestResetPassword = async (email: string) => {
+  const user = await User.findOne({ email });
+  if (!user) throw new HttpException(404, "User not found");
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    expiresIn: "1h",
+  });
+  await sendEmailToResetPassword(user.email, token);
+  user.resetToken = token;
+  user.resetTokenExpiry = new Date(Date.now() + 3600000);
+  return await user.save();
+};
+export const resetPassword = async (
+  token: string,
+  newPassword: string,
+  repeatNewPassword: string
+) => {
+  if (newPassword !== repeatNewPassword) {
+    throw new HttpException(400, "New passwords do not match");
+  }
+
+  if (!passwordValidation.value.test(newPassword)) {
+    throw new HttpException(400, passwordValidation.message);
+  }
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+
+  let payload;
+  try {
+    payload = jwt.verify(token, JWT_SECRET) as { userId: string };
+  } catch (err) {
+    throw new HttpException(401, "Token is invalid or expired");
+  }
+
+  const user = await User.findById(payload.userId);
+  if (!user) throw new HttpException(404, "User not found");
+
+  if (
+    !user.resetToken ||
+    user.resetToken !== token ||
+    !user.resetTokenExpiry ||
+    user.resetTokenExpiry < new Date()
+  ) {
+    throw new HttpException(400, "Reset token is invalid or has expired");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  user.resetToken = undefined;
+  user.resetTokenExpiry = undefined;
+
+  await user.save();
 };

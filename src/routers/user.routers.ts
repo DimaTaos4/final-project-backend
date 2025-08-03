@@ -11,6 +11,9 @@ import {
   getUserByIdController,
   updateUserProfileController,
   verifyEmailController,
+  resendVerificationEmailController,
+  requestResetPasswordController,
+  resetPasswordController,
 } from "../controllers/users.controller";
 
 const usersRouter = Router();
@@ -20,6 +23,8 @@ usersRouter.get("/", getUsersController);
 usersRouter.get("/:id", getUserByIdController);
 
 usersRouter.post("/register", addUsersController);
+
+usersRouter.post("/resend-email", resendVerificationEmailController);
 
 usersRouter.get("/verify/:token", verifyEmailController);
 
@@ -32,4 +37,6 @@ usersRouter.patch(
   updateUserProfileController
 );
 
+usersRouter.post("/reset-request", requestResetPasswordController);
+usersRouter.post("/reset-password", resetPasswordController);
 export default usersRouter;

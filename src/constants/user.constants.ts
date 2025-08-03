@@ -1,5 +1,3 @@
-import { Request, Response } from "express";
-import { User } from "../models/Users/Users";
 
 export const emailValidation = {
   value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,

@@ -6,6 +6,10 @@ import { ValidationError } from "yup";
 import cloudinary from "../utils/cloudinary";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import { Readable } from "stream";
+import { User } from "../models/Users/Users";
+import { v4 as uuidv4 } from "uuid";
+import resend from "../resend";
+
 const { FRONTEND_URL } = process.env;
 export const addUsersController = async (
   req: Request,
@@ -18,11 +22,9 @@ export const addUsersController = async (
       stripUnknown: true,
     });
 
-    await usersService.addUsers(validatedData);
+    const data = await usersService.addUsers(validatedData);
 
-    res.status(201).json({
-      message: `Registration successful. Check your email`,
-    });
+    res.status(201).json(data);
   } catch (error) {
     if (error instanceof ValidationError) {
       const message = error.errors[0] || "Invalid input";
@@ -39,11 +41,46 @@ export const verifyEmailController = async (
 ) => {
   try {
     await usersService.verifyEmail(req.params.token);
-    res.redirect(`${FRONTEND_URL}/login`);
+    res.redirect(`${FRONTEND_URL}/verify-email?success=true`);
   } catch (error) {
     next(error);
   }
 };
+
+export const resendVerificationEmailController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new HttpException(400, "Email is required");
+
+    const user = await User.findOne({ email });
+    if (!user) throw new HttpException(404, "User not found");
+
+    if (user.isVerified) {
+      throw new HttpException(400, "Email already verified");
+    }
+
+    const verificationToken = uuidv4();
+    user.verificationToken = verificationToken;
+    await user.save();
+
+    const { PORT } = process.env;
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: email,
+      subject: "Resend email verification",
+      html: `Click to verify: <a href="http://localhost:${PORT}/api/users/verify/${verificationToken}">Verify Email</a>`,
+    });
+
+    res.status(200).json({ message: "Verification email sent again" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const loginUserController = async (
   req: Request,
   res: Response,
@@ -87,6 +124,7 @@ export const getUserByIdController = async (
       email: result.email,
       fullName: result.fullName,
       userName: result.userName,
+      isVerified: result.isVerified,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
     });
@@ -144,6 +182,36 @@ export const updateUserProfileController = async (
     res.status(200).json({
       message: "Profile updated",
       user: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestResetPasswordController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body;
+    const data = await usersService.requestResetPassword(email);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPasswordController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { token, newPassword, repeatNewPassword } = req.body;
+    await usersService.resetPassword(token, newPassword, repeatNewPassword);
+    res.json({
+      message: "Password successfully changed",
     });
   } catch (error) {
     next(error);
