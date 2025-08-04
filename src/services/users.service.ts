@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { passwordValidation } from "../constants/user.constants";
 const { JWT_SECRET } = process.env;
+
 export const addUsers = async (payload: AddUserInput): Promise<IUserDoc> => {
   const existingUser = await User.findOne({ email: payload.email });
   if (existingUser) {
@@ -31,6 +32,7 @@ export const addUsers = async (payload: AddUserInput): Promise<IUserDoc> => {
     verificationToken,
   });
 };
+
 export const verifyEmail = async (token: string) => {
   const user = await User.findOne({ verificationToken: token });
   if (!user) throw new HttpException(401, "Invalid token");
@@ -70,6 +72,8 @@ export const loginUser = async ({ email, password }: ILoginUser) => {
       email: user.email,
       fullName: user.fullName,
       userName: user.userName,
+      followers: user.followers,
+      following: user.following,
     },
   };
 };
@@ -146,4 +150,11 @@ export const resetPassword = async (
   user.resetTokenExpiry = undefined;
 
   await user.save();
+};
+
+export const searchUsers = async (q: string) => {
+  const user = await User.find({
+    userName: { $regex: q, $options: "i" },
+  }).select("-password -isVerified -verificationToken");
+  return user;
 };

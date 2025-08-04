@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import mongoose, { Schema, model, Document, Types } from "mongoose";
 import {
   emailValidation,
   passwordValidation,
@@ -12,6 +12,8 @@ interface IUserDoc extends Document {
   password: string;
   bio?: string;
   avatarUrl?: string;
+  followers: Types.ObjectId[];
+  following: Types.ObjectId[];
   link?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -50,9 +52,12 @@ const userSchema = new Schema<IUserDoc>(
         message: passwordValidation.message,
       },
     },
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     bio: { type: String, default: "" },
     avatarUrl: { type: String, default: "" },
     link: { type: String, default: "" },
+
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
     resetToken: {

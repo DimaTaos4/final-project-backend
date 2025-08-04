@@ -125,6 +125,8 @@ export const getUserByIdController = async (
       fullName: result.fullName,
       userName: result.userName,
       isVerified: result.isVerified,
+      followers: result.followers,
+      following: result.following,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
     });
@@ -213,6 +215,20 @@ export const resetPasswordController = async (
     res.json({
       message: "Password successfully changed",
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const searchUsersController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { q } = req.query;
+    const users = await usersService.searchUsers(q as string);
+    res.json(users);
   } catch (error) {
     next(error);
   }
