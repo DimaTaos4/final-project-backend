@@ -280,10 +280,8 @@ export const unfollowUserController = async (
     const followedId = req.params.id;
     const currentUserId = req.userId;
     if (!currentUserId) throw new HttpException(401, "Unauthorized");
-    await usersService.unfollowUser(followedId, currentUserId);
-    res.status(200).json({
-      message: "Unfollowed successfully",
-    });
+    const data = await usersService.unfollowUser(followedId, currentUserId);
+    res.status(200).json(data);
   } catch (error) {
     next(error);
   }

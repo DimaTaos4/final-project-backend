@@ -226,5 +226,5 @@ export const unfollowUser = async (
   currentUser.following = currentUser.following.filter(
     (followingId) => !followingId.equals(followedId)
   );
-  await currentUser.save();
+  return await currentUser.save();
 };
