@@ -69,7 +69,7 @@ export const loginUser = async ({ email, password }: ILoginUser) => {
   return {
     token,
     user: {
-      id: user._id,
+      _id: user._id,
       email: user.email,
       fullName: user.fullName,
       userName: user.userName,
