@@ -131,3 +131,26 @@ export const deletePostController = async (
     next(error);
   }
 };
+
+export const getPostByIdUserController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const data = await postsService.getPostByIdUser(id);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllPostsController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const data = await postsService.getAllPosts();
+  res.json(data);
+};

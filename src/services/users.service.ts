@@ -1,4 +1,5 @@
 import { User, IUserDoc } from "../models/Users/Users";
+import { Types } from "mongoose";
 import bcrypt from "bcrypt";
 import HttpException from "../utils/HttpExeption";
 import { AddUserInput } from "../validation/user.schema";
@@ -157,4 +158,73 @@ export const searchUsers = async (q: string) => {
     userName: { $regex: q, $options: "i" },
   }).select("-password -isVerified -verificationToken");
   return user;
+};
+
+export const deleteUser = async (userId: string) => {
+  const user = await User.findByIdAndDelete(userId);
+  if (!user) throw new HttpException(404, "User not found");
+
+  await User.updateMany(
+    { followers: userId },
+    { $pull: { followers: userId } }
+  );
+
+  await User.updateMany(
+    { following: userId },
+    { $pull: { following: userId } }
+  );
+
+  return;
+};
+
+export const followUser = async (followedId: string, currentUserId: string) => {
+  if (followedId === currentUserId)
+    throw new HttpException(400, "You cannot follow yourself");
+
+  const followedUser = await User.findById(followedId);
+
+  const currentUser = await User.findById(currentUserId);
+  if (!currentUser || !followedUser)
+    throw new HttpException(404, "User not found");
+  if (followedUser.followers.includes(new Types.ObjectId(currentUserId)))
+    throw new HttpException(400, "You have been followed");
+
+  followedUser.followers.push(new Types.ObjectId(currentUserId));
+  await followedUser.save();
+  currentUser.following.push(new Types.ObjectId(followedId));
+  return await currentUser.save();
+};
+
+export const unfollowUser = async (
+  followedId: string,
+  currentUserId: string
+) => {
+  if (followedId === currentUserId) {
+    throw new HttpException(400, "You cannot unfollow yourself");
+  }
+
+  const followedUser = await User.findById(followedId);
+  const currentUser = await User.findById(currentUserId);
+
+  if (!followedUser || !currentUser) {
+    throw new HttpException(404, "User not found");
+  }
+
+  const isFollowing = followedUser.followers.some((followerId) =>
+    followerId.equals(currentUserId)
+  );
+
+  if (!isFollowing) {
+    throw new HttpException(400, "You are not following this user");
+  }
+
+  followedUser.followers = followedUser.followers.filter(
+    (followerId) => !followerId.equals(currentUserId)
+  );
+  await followedUser.save();
+
+  currentUser.following = currentUser.following.filter(
+    (followingId) => !followingId.equals(followedId)
+  );
+  await currentUser.save();
 };

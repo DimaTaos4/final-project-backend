@@ -14,7 +14,10 @@ import {
   resendVerificationEmailController,
   requestResetPasswordController,
   resetPasswordController,
-  searchUsersController
+  searchUsersController,
+  followUserController,
+  deleteUserController,
+  unfollowUserController
 } from "../controllers/users.controller";
 
 const usersRouter = Router();
@@ -22,8 +25,6 @@ const usersRouter = Router();
 usersRouter.get("/", getUsersController);
 
 usersRouter.get("/:id", getUserByIdController);
-
-
 
 usersRouter.post("/register", addUsersController);
 
@@ -44,7 +45,12 @@ usersRouter.post("/reset-request", requestResetPasswordController);
 
 usersRouter.post("/reset-password", resetPasswordController);
 
-usersRouter.get("/search/users", searchUsersController)
+usersRouter.get("/search/users", searchUsersController);
+
+usersRouter.delete("/:id", authMiddleware, deleteUserController);
+
+usersRouter.post("/:id/follow", authMiddleware, followUserController);
+usersRouter.post("/:id/unfollow", authMiddleware, unfollowUserController);
 
 
 export default usersRouter;

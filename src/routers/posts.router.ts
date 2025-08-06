@@ -7,6 +7,8 @@ import {
   getImagesByIdController,
   editPostController,
   deletePostController,
+  getPostByIdUserController,
+  getAllPostsController
 } from "../controllers/posts.controller";
 
 const postRouter = Router();
@@ -17,6 +19,11 @@ postRouter.post(
   upload.array("images", 10),
   createPostController
 );
+
+postRouter.get("/", getAllPostsController)
+
+
+postRouter.get("/byuser/:id", getPostByIdUserController);
 
 postRouter.get("/mine", authMiddleware, getUserPostsController);
 

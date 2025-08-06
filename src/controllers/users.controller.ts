@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import * as usersService from "../services/users.service";
 import { addUserSchema } from "../validation/user.schema";
 import HttpException from "../utils/HttpExeption";
@@ -9,10 +9,10 @@ import { Readable } from "stream";
 import { User } from "../models/Users/Users";
 import { v4 as uuidv4 } from "uuid";
 import resend from "../resend";
-
+import { Types } from "mongoose";
 const { FRONTEND_URL } = process.env;
 export const addUsersController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -35,7 +35,7 @@ export const addUsersController = async (
   }
 };
 export const verifyEmailController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -48,7 +48,7 @@ export const verifyEmailController = async (
 };
 
 export const resendVerificationEmailController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -82,7 +82,7 @@ export const resendVerificationEmailController = async (
 };
 
 export const loginUserController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -95,7 +95,7 @@ export const loginUserController = async (
 };
 
 export const getUsersController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -108,7 +108,7 @@ export const getUsersController = async (
 };
 
 export const getUserByIdController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -191,7 +191,7 @@ export const updateUserProfileController = async (
 };
 
 export const requestResetPasswordController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -205,7 +205,7 @@ export const requestResetPasswordController = async (
 };
 
 export const resetPasswordController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -221,7 +221,7 @@ export const resetPasswordController = async (
 };
 
 export const searchUsersController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -229,6 +229,61 @@ export const searchUsersController = async (
     const { q } = req.query;
     const users = await usersService.searchUsers(q as string);
     res.json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUserController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userIdToDelete = req.params.id;
+    const currentUserId = req.userId;
+
+    if (!currentUserId || currentUserId !== userIdToDelete) {
+      throw new HttpException(403, "You are not allowed to delete this user");
+    }
+
+    await usersService.deleteUser(userIdToDelete);
+
+    res.status(200).json({ message: "User and related subscriptions deleted" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const followUserController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const followedId = req.params.id;
+    const currentUserId = req.userId;
+    if (!currentUserId) throw new HttpException(401, "Unauthorized");
+    const data = await usersService.followUser(followedId, currentUserId);
+    res.status(200).json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const unfollowUserController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const followedId = req.params.id;
+    const currentUserId = req.userId;
+    if (!currentUserId) throw new HttpException(401, "Unauthorized");
+    await usersService.unfollowUser(followedId, currentUserId);
+    res.status(200).json({
+      message: "Unfollowed successfully",
+    });
   } catch (error) {
     next(error);
   }
