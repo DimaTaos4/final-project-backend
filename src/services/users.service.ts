@@ -11,6 +11,9 @@ import { UpdateUserInput } from "../validation/user.schema";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { passwordValidation } from "../constants/user.constants";
+
+import { Post } from "../models/Posts/Post";
+
 const { JWT_SECRET } = process.env;
 
 export const addUsers = async (payload: AddUserInput): Promise<IUserDoc> => {
@@ -168,11 +171,12 @@ export const deleteUser = async (userId: string) => {
     { followers: userId },
     { $pull: { followers: userId } }
   );
-
   await User.updateMany(
     { following: userId },
     { $pull: { following: userId } }
   );
+
+  await Post.deleteMany({ author: userId });
 
   return;
 };
