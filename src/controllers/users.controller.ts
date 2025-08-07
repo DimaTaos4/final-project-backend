@@ -286,3 +286,31 @@ export const unfollowUserController = async (
     next(error);
   }
 };
+
+export const getFollowersByIdController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const data = await usersService.getFollowersById(id);
+    res.json(data.followers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getFollowingByIdController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const data = await usersService.getFollowingsById(id);
+    res.json(data.following);
+  } catch (error) {
+    next(error);
+  }
+};

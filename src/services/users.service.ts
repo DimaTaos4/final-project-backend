@@ -228,3 +228,21 @@ export const unfollowUser = async (
   );
   return await currentUser.save();
 };
+
+export const getFollowersById = async (id: string) => {
+  const data = await User.findById(id).populate(
+    "followers",
+    "avatarUrl userName"
+  );
+  if (!data) throw new HttpException(404, "Not found user");
+  return data;
+};
+
+export const getFollowingsById = async (id: string) => {
+  const data = await User.findById(id).populate(
+    "following",
+    "avatarUrl userName"
+  );
+  if (!data) throw new HttpException(404, "Not found user");
+  return data;
+};

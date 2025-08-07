@@ -17,7 +17,9 @@ import {
   searchUsersController,
   followUserController,
   deleteUserController,
-  unfollowUserController
+  unfollowUserController,
+  getFollowersByIdController,
+  getFollowingByIdController
 } from "../controllers/users.controller";
 
 const usersRouter = Router();
@@ -52,5 +54,8 @@ usersRouter.delete("/:id", authMiddleware, deleteUserController);
 usersRouter.post("/:id/follow", authMiddleware, followUserController);
 usersRouter.post("/:id/unfollow", authMiddleware, unfollowUserController);
 
+usersRouter.get("/:id/followers", getFollowersByIdController);
+
+usersRouter.get("/:id/following", getFollowingByIdController)
 
 export default usersRouter;
