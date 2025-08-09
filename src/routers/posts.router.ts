@@ -8,7 +8,8 @@ import {
   editPostController,
   deletePostController,
   getPostByIdUserController,
-  getAllPostsController
+  getAllPostsController,
+  getPostsfromFollowingController
 } from "../controllers/posts.controller";
 
 const postRouter = Router();
@@ -20,8 +21,7 @@ postRouter.post(
   createPostController
 );
 
-postRouter.get("/", getAllPostsController)
-
+postRouter.get("/", getAllPostsController);
 
 postRouter.get("/byuser/:id", getPostByIdUserController);
 
@@ -37,5 +37,7 @@ postRouter.patch(
 );
 
 postRouter.delete("/delete/:id", authMiddleware, deletePostController);
+
+postRouter.get("/feed/:id", getPostsfromFollowingController);
 
 export default postRouter;

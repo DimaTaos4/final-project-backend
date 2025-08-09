@@ -154,3 +154,17 @@ export const getAllPostsController = async (
   const data = await postsService.getAllPosts();
   res.json(data);
 };
+
+export const getPostsfromFollowingController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.params.id;
+    const result = await postsService.getPostsfromFollowing(userId);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};

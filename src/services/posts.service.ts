@@ -2,7 +2,7 @@ import { Post, PostDoc } from "../models/Posts/Post";
 import HttpException from "../utils/HttpExeption";
 import cloudinary from "../utils/cloudinary";
 import streamifier from "streamifier";
-
+import { User } from "../models/Users/Users";
 interface EditPostParams {
   postId: string;
   userId: string;
@@ -105,5 +105,17 @@ export const getPostByIdUser = async (userId: string) => {
 
 export const getAllPosts = async () => {
   const posts = await Post.find();
+  return posts;
+};
+
+export const getPostsfromFollowing = async (userId: string) => {
+  const currUser = await User.findById(userId);
+  if (!currUser) throw new HttpException(404, "User not found");
+  const posts = await Post.find({ author: { $in: currUser.following } })
+    .sort({
+      createdAt: -1,
+    })
+    .populate("author", "userName avatarUrl followers")
+    .exec();
   return posts;
 };

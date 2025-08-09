@@ -250,3 +250,5 @@ export const getFollowingsById = async (id: string) => {
   if (!data) throw new HttpException(404, "Not found user");
   return data;
 };
+
+

@@ -10,7 +10,7 @@ interface PostDoc extends Document {
 
 const postSchema = new Schema<PostDoc>(
   {
-    author: { type: Schema.Types.ObjectId, ref: "user", required: true },
+    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     imageUrls: [{ type: String, required: true }],
     caption: { type: String, default: "" },
   },
