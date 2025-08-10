@@ -9,7 +9,6 @@ import { Readable } from "stream";
 import { User } from "../models/Users/Users";
 import { v4 as uuidv4 } from "uuid";
 import resend from "../resend";
-import { Types } from "mongoose";
 const { FRONTEND_URL } = process.env;
 export const addUsersController = async (
   req: AuthenticatedRequest,

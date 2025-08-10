@@ -3,6 +3,7 @@ import HttpException from "../utils/HttpExeption";
 import cloudinary from "../utils/cloudinary";
 import streamifier from "streamifier";
 import { User } from "../models/Users/Users";
+import { Types } from "mongoose";
 interface EditPostParams {
   postId: string;
   userId: string;
@@ -23,8 +24,13 @@ export const getUserPosts = (userId: string): Promise<PostDoc[]> => {
 };
 
 export const getImagesById = async (postId: string) => {
-  const post = await Post.findById(postId);
+  const post = await Post.findById(postId).populate({
+    path: "comments.user",
+    select: "userName avatarUrl",
+  });
+
   if (!post) throw new HttpException(404, "Post not found");
+
   return post;
 };
 
@@ -118,4 +124,79 @@ export const getPostsfromFollowing = async (userId: string) => {
     .populate("author", "userName avatarUrl followers")
     .exec();
   return posts;
+};
+
+export const likePost = async (id: string, currentUserId: string) => {
+  const post = await Post.findById(id);
+  if (!post) throw new HttpException(404, "Post not found");
+
+  const user = await User.findById(currentUserId);
+  if (!user) throw new HttpException(404, "User not found");
+
+  const alreadyLiked = post.likes.includes(currentUserId as any);
+  if (alreadyLiked) {
+    post.likes = post.likes.filter(
+      (userId) => userId.toString() !== currentUserId
+    );
+  } else {
+    post.likes.push(new Types.ObjectId(currentUserId));
+  }
+
+  const updatedPost = await post.save();
+  return updatedPost;
+};
+
+export const commentPost = async (
+  id: string,
+  currentUserId: string,
+  commentText: string
+) => {
+  const post = await Post.findById(id);
+  if (!post) throw new HttpException(404, "Post not found");
+
+  const user = await User.findById(currentUserId);
+  if (!user) throw new HttpException(404, "User not found");
+
+  const newComment = {
+    user: new Types.ObjectId(currentUserId),
+    text: commentText,
+    createdAt: new Date(),
+  };
+
+  post.comments.push(newComment);
+
+  await post.save();
+
+  const updatedPost = await Post.findById(id).populate({
+    path: "comments.user",
+    select: "userName avatarUrl",
+  });
+
+  return updatedPost;
+};
+
+export const deleteComment = async (
+  postId: string,
+  commentId: string,
+  currentUserId: string
+) => {
+  const post = await Post.findById(postId);
+  if (!post) throw new HttpException(404, "Post not found");
+
+  const comment = post.comments.find(
+    (c: any) => c._id.toString() === commentId
+  );
+
+  if (!comment) throw new HttpException(404, "Comment not found");
+
+  if (comment.user.toString() !== currentUserId) {
+    throw new HttpException(403, "You are not allowed to delete this comment");
+  }
+
+  post.comments = post.comments.filter(
+    (c: any) => c._id.toString() !== commentId
+  );
+
+  const updatedPost = await post.save();
+  return updatedPost;
 };

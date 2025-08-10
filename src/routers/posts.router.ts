@@ -9,7 +9,10 @@ import {
   deletePostController,
   getPostByIdUserController,
   getAllPostsController,
-  getPostsfromFollowingController
+  getPostsfromFollowingController,
+  likePostController,
+  commentPostController,
+  deleteCommentController,
 } from "../controllers/posts.controller";
 
 const postRouter = Router();
@@ -39,5 +42,15 @@ postRouter.patch(
 postRouter.delete("/delete/:id", authMiddleware, deletePostController);
 
 postRouter.get("/feed/:id", getPostsfromFollowingController);
+
+postRouter.post("/like/:id", authMiddleware, likePostController);
+
+postRouter.post("/comment/:id", authMiddleware, commentPostController);
+
+postRouter.delete(
+  "/comment/:postId/:commentId",
+  authMiddleware,
+  deleteCommentController
+);
 
 export default postRouter;

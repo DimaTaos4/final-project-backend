@@ -168,3 +168,62 @@ export const getPostsfromFollowingController = async (
     next(error);
   }
 };
+
+export const likePostController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.userId;
+    if (!currentUserId) throw new HttpException(404, "Unauthorized");
+    const data = await postsService.likePost(id, currentUserId);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const commentPostController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+    const currentUserId = req.userId;
+
+    if (!currentUserId) throw new HttpException(401, "Unauthorized");
+    if (!text) throw new HttpException(400, "Comment text is required");
+
+    const data = await postsService.commentPost(id, currentUserId, text);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCommentController = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { postId, commentId } = req.params;
+    const currentUserId = req.userId;
+
+    if (!currentUserId) throw new HttpException(401, "Unauthorized");
+
+    const updatedPost = await postsService.deleteComment(
+      postId,
+      commentId,
+      currentUserId
+    );
+
+    res.json(updatedPost);
+  } catch (error) {
+    next(error);
+  }
+};
