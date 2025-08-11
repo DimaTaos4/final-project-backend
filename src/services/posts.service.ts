@@ -106,9 +106,6 @@ export const deletePost = async (postId: string, userId: string) => {
 
 export const getPostByIdUser = async (userId: string) => {
   const posts = await Post.find({ author: userId }).sort({ createdAt: -1 });
-  if (!posts || posts.length === 0) {
-    throw new HttpException(404, "No posts found for this user");
-  }
   return posts;
 };
 
