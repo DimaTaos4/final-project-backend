@@ -4,6 +4,9 @@ import cloudinary from "../utils/cloudinary";
 import streamifier from "streamifier";
 import { User } from "../models/Users/Users";
 import { Types } from "mongoose";
+
+import * as notificationService from "./notifications.service";
+
 interface EditPostParams {
   postId: string;
   userId: string;
@@ -140,6 +143,15 @@ export const likePost = async (id: string, currentUserId: string) => {
     );
   } else {
     post.likes.push(new Types.ObjectId(currentUserId));
+
+    if (post.author.toString() !== currentUserId) {
+      await notificationService.createNotification({
+        type: "like",
+        sender: currentUserId,
+        receiver: post.author.toString(),
+        post: (post._id as Types.ObjectId).toString(),
+      });
+    }
   }
 
   const updatedPost = await post.save();
@@ -166,6 +178,16 @@ export const commentPost = async (
   post.comments.push(newComment);
 
   await post.save();
+
+  if (post.author.toString() !== currentUserId) {
+    await notificationService.createNotification({
+      type: "comment",
+      sender: currentUserId,
+      receiver: post.author.toString(),
+      post: (post._id as Types.ObjectId).toString(),
+      comment: commentText,
+    });
+  }
 
   const updatedPost = await Post.findById(id).populate({
     path: "comments.user",

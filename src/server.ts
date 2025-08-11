@@ -6,6 +6,8 @@ import notFoundHadler from "./middlewares/notFoundHandler";
 import errorHandler from "./middlewares/errorHadler";
 import usersRouter from "./routers/user.routers";
 
+import notificationsRouter from "./routers/notifications.router";
+
 const startServer = (): void => {
   const app: Express = express();
   app.use(cors());
@@ -13,6 +15,7 @@ const startServer = (): void => {
 
   app.use("/api/users", usersRouter);
   app.use("/api/posts", postsRouter);
+  app.use("/api/notifications", notificationsRouter);
 
   app.use(notFoundHadler);
   app.use(errorHandler);

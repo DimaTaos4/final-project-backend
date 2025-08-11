@@ -14,6 +14,8 @@ import { passwordValidation } from "../constants/user.constants";
 
 import { Post } from "../models/Posts/Post";
 
+import * as notificationService from "./notifications.service";
+
 const { JWT_SECRET } = process.env;
 
 export const addUsers = async (payload: AddUserInput): Promise<IUserDoc> => {
@@ -186,17 +188,26 @@ export const followUser = async (followedId: string, currentUserId: string) => {
     throw new HttpException(400, "You cannot follow yourself");
 
   const followedUser = await User.findById(followedId);
-
   const currentUser = await User.findById(currentUserId);
   if (!currentUser || !followedUser)
     throw new HttpException(404, "User not found");
+
   if (followedUser.followers.includes(new Types.ObjectId(currentUserId)))
     throw new HttpException(400, "You have been followed");
 
   followedUser.followers.push(new Types.ObjectId(currentUserId));
-  await followedUser.save();
   currentUser.following.push(new Types.ObjectId(followedId));
-  return await currentUser.save();
+
+  await followedUser.save();
+  await currentUser.save();
+
+  await notificationService.createNotification({
+    type: "follow",
+    sender: currentUserId,
+    receiver: followedId,
+  });
+
+  return currentUser;
 };
 
 export const unfollowUser = async (
@@ -250,5 +261,3 @@ export const getFollowingsById = async (id: string) => {
   if (!data) throw new HttpException(404, "Not found user");
   return data;
 };
-
-
