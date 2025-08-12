@@ -78,6 +78,7 @@ export const loginUser = async ({ email, password }: ILoginUser) => {
       email: user.email,
       fullName: user.fullName,
       userName: user.userName,
+      avatarUrl: user.avatarUrl,
       followers: user.followers,
       following: user.following,
     },
