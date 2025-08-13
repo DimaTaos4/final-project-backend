@@ -4,7 +4,7 @@ import cloudinary from "../utils/cloudinary";
 import streamifier from "streamifier";
 import { User } from "../models/Users/Users";
 import { Types } from "mongoose";
-
+import { shuffle } from "lodash";
 import * as notificationService from "./notifications.service";
 
 interface EditPostParams {
@@ -116,7 +116,7 @@ export const getPostByIdUser = async (userId: string) => {
 
 export const getAllPosts = async () => {
   const posts = await Post.find();
-  return posts;
+  return shuffle(posts);
 };
 
 export const getPostsfromFollowing = async (userId: string) => {
