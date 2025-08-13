@@ -55,5 +55,9 @@ export const sendMessage = async (
     lastMessage: message._id,
   });
 
-  return message;
+  const populatedMessage = await Message.findById(message._id).populate(
+    "sender"
+  );
+
+  return populatedMessage;
 };

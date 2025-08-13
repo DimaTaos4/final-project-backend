@@ -80,11 +80,16 @@ export const editPostById = async ({
   if (newCaption !== undefined) {
     post.caption = newCaption;
   }
+
   post.imageUrls = newImageUrls;
 
   await post.save();
 
-  return post;
+  const populatedPost = await Post.findById(post._id)
+    .populate("author")
+    .populate("comments.user");
+
+  return populatedPost;
 };
 
 export const deletePost = async (postId: string, userId: string) => {
