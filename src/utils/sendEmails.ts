@@ -1,9 +1,9 @@
 import resend from "../resend";
 import "dotenv/config";
-const { PORT, FRONTEND_URL } = process.env;
+const { BACKEND_URL, FRONTEND_URL } = process.env;
 
 export const sendEmailToConfirm = async (email: string, token: string) => {
-  const verificationLink = `http://localhost:${PORT}/api/users/verify/${token}`;
+  const verificationLink = `${BACKEND_URL}/api/users/verify/${token}`;
 
   await resend.emails.send({
     from: "onboarding@resend.dev",
