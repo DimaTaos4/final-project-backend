@@ -7,11 +7,12 @@ import { setupSocket } from "./socket";
 const bootstrap = async () => {
   await connectDatabase();
 
-  const port = process.env.PORT || 3000;
+  const port = Number(process.env.PORT) || 3000;
+
   const server = http.createServer(app);
   setupSocket(server);
 
-  server.listen(port, () => {
+  server.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
   });
 };
