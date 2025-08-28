@@ -1,12 +1,15 @@
 import resend from "../resend";
 import "dotenv/config";
+
 const { BACKEND_URL, FRONTEND_URL } = process.env;
+
+const FROM_EMAIL = "Ichgram <noreply@ichgram.com>";
 
 export const sendEmailToConfirm = async (email: string, token: string) => {
   const verificationLink = `${BACKEND_URL}/api/users/verify/${token}`;
 
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: FROM_EMAIL,
     to: email,
     subject: "Please confirm your email address",
     html: `
@@ -34,7 +37,7 @@ export const sendEmailToResetPassword = async (
   const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
 
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: FROM_EMAIL,
     to: email,
     subject: "Reset your Ichgram password",
     html: `
